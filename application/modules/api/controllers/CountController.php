@@ -34,12 +34,19 @@ class Api_CountController extends REST_Controller
     {
         $tags = $this->_getParam('tags', 0);
       
-        $count      = Lazada_Post::countPostByTag($tags);
-        if(isset($count) && !empty($count)){
-            $this->view->count = $count;
+        $regex = "/(.*)[^,0-9](.*)/";
+        $val = new Zend_Validate_Regex(array('pattern'=> $regex));
+        if($val->isValid($tags) == false){
+            $count      = Lazada_Post::countPostByTag($tags);
+            if(isset($count) && !empty($count)){
+                $this->view->count = $count;
+            } else {
+                $this->view->errors = 'Error';
+            }
         } else {
-            $this->view->errors = 'Error';
+            $this->view->errors = 'Input wrong';
         }
+        
         
         $this->_response->ok();
     }

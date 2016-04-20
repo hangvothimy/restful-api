@@ -1,9 +1,8 @@
 <?php
-
 /**
  * Regular controller
  **/
-class Api_PostsController extends REST_Controller
+class Api_AddtagsController extends REST_Controller
 {
     /**
      * The index action handles index/list requests; it should respond with a
@@ -33,18 +32,33 @@ class Api_PostsController extends REST_Controller
      */
     public function getAction()
     {
-        $tags = $this->_getParam('tags', 0);
-       
+        $tags = $this->_getParam('tags', 0);        
+        $posts = $this->_getParam('posts', 0);
+        
         $regex = "/(.*)[^,0-9](.*)/";
         $val = new Zend_Validate_Regex(array('pattern'=> $regex));
-        if($val->isValid($tags) == false){
-            $list      = Lazada_Post::getListPostByTag($tags);
-            if(isset($list) && is_array($list) && !empty($list)){
-                $this->view->contents = $list;
+        if($val->isValid($tags) == false && $val->isValid($posts) == false){
+            $tag_arr = explode(',', $tags);  
+            $post_arr = explode(',', $posts);
+            
+            $list_add = array();
+            if(is_array($tag_arr) && !empty($post_arr)) {
+                foreach ($tag_arr as $tag_id){
+                    foreach ($post_arr as $post_id){
+                        if (Lazada_TagPost::checkNotExist($tag_id, $post_id) == true) {
+                            $param = array('tag_id' => $tag_id , 'post_id' => $post_id);
+                            $list      = Lazada_TagPost::add($param);
+                            $list_add[] = $list;
+                        }                    
+                    }
+                }
+            }
+            if(isset($list_add) && is_array($list_add) && !empty($list_add)){
+                $this->view->contents = $list_add;
             } else {
                 $this->view->errors = 'Error';
             }
-        }else{
+        } else {
             $this->view->errors = 'Input wrong';
         }
         
